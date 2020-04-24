@@ -28,15 +28,7 @@ import net.sf.json.JSONObject;
 
 public class ExcelWrapper {
 
-    public static void main(String[] args)
-    {
-        // You can specify your excel file path.
-        String excelFilePath = "/Users/zhaosong/Documents/WorkSpace/EmployeeInfo.xls";
-
-        // This method will read each sheet data from above excel file and create a JSON and a text file to save the sheet data.
-        creteJSONAndTextFileFromExcel(excelFilePath);
-    }
-
+    
 
     /* Read data from an excel file and output each sheet data to a json file and a text file. 
      * filePath :  The excel file store path.
