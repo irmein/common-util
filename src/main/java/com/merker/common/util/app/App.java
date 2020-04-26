@@ -10,15 +10,19 @@ public class App
 {
     private File file;
 
-    public static void main( String[] args )
-    {
-        System.out.println( "Hello World!" );
+    public static void main( String[] args ) throws Exception {
+        if(1 == args.length) {
+            File file = new File(args[0]);
+            ExcelWrapper.process(file);
+        } else {
+            displayError(true);
+        }
     }
 
 
-    public  void  process() {
-       if(null == file) {
-          System.out.println("File processing aborted.");
-       }
+    private static void displayError(boolean displayHelp) {
+        if(displayHelp) {
+            System.out.println("Pass the file to be converted in -f option.");
+        }
     }
 }

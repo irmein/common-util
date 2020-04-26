@@ -28,13 +28,19 @@ import net.sf.json.JSONObject;
 
 public class ExcelWrapper {
 
-    
+    /*
+     *
+     * */
+    public static void process(File file) {
+       creteJSONAndTextFileFromExcel(file);
+    }
 
     /* Read data from an excel file and output each sheet data to a json file and a text file. 
      * filePath :  The excel file store path.
      * */
-    private static void creteJSONAndTextFileFromExcel(String filePath)
+    private static void creteJSONAndTextFileFromExcel(File file)
     {
+        String filePath = file.getAbsolutePath();
         try{
          /* First need to open the file. */
             FileInputStream fInputStream = new FileInputStream(filePath.trim());
@@ -64,12 +70,12 @@ public class ExcelWrapper {
                     // Generate JSON format of above sheet data and write to a JSON file.
                     String jsonString = getJSONStringFromList(sheetDataTable);
                     String jsonFileName = sheet.getSheetName() + ".json";
-                    writeStringToFile(jsonString, jsonFileName);
+                    writeStringToFile(file.getParentFile().getAbsolutePath(), jsonString, jsonFileName);
 
                     // Generate text table format of above sheet data and write to a text file.
                     String textTableString = getTextTableStringFromList(sheetDataTable);
                     String textTableFileName = sheet.getSheetName() + ".txt";
-                    writeStringToFile(textTableString, textTableFileName);
+                    writeStringToFile(file.getParentFile().getAbsolutePath(), textTableString, textTableFileName);
 
                 }
             }
@@ -239,12 +245,12 @@ public class ExcelWrapper {
     }
 
     /* Write string data to a file.*/
-    private static void writeStringToFile(String data, String fileName)
+    private static void writeStringToFile(String workingDir, String data, String fileName)
     {
         try
         {
             // Get current executing class working directory.
-            String currentWorkingFolder = System.getProperty("user.dir");
+            String currentWorkingFolder = workingDir;
 
             // Get file path separator.
             String filePathSeperator = System.getProperty("file.separator");
