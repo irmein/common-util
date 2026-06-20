@@ -23,8 +23,7 @@ import org.openqa.selenium.json.Json;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
-
-import net.sf.json.JSONObject;
+import com.google.gson.JsonObject;
 
 public class ExcelWrapper {
 
@@ -121,9 +120,9 @@ public class ExcelWrapper {
                     Cell cell = row.getCell(j);
 
                     // Get cell type.
-                    int cellType = cell.getCellType();
+                    CellType cellType = cell.getCellType();
 
-                    if(cellType == CellType.NUMERIC.getCode())
+                    if(cellType == CellType.NUMERIC)
                     {
                         double numberValue = cell.getNumericCellValue();
 
@@ -133,11 +132,11 @@ public class ExcelWrapper {
 
                         rowDataList.add(stringCellValue);
 
-                    }else if(cellType == CellType.STRING.getCode())
+                    }else if(cellType == CellType.STRING)
                     {
                         String cellValue = cell.getStringCellValue();
                         rowDataList.add(cellValue);
-                    }else if(cellType == CellType.BOOLEAN.getCode())
+                    }else if(cellType == CellType.BOOLEAN)
                     {
                         boolean numberValue = cell.getBooleanCellValue();
 
@@ -145,7 +144,7 @@ public class ExcelWrapper {
 
                         rowDataList.add(stringCellValue);
 
-                    }else if(cellType == CellType.BLANK.getCode())
+                    }else if(cellType == CellType.BLANK)
                     {
                         rowDataList.add("");
                     }
@@ -169,8 +168,8 @@ public class ExcelWrapper {
 
             if(rowCount > 1)
             {
-                // Create a JSONObject to store table data.
-                JSONObject tableJsonObject = new JSONObject();
+                // Create a JsonObject to store table data.
+                JsonObject tableJsonObject = new JsonObject();
 
                 // The first row is the header row, store each column name.
                 List<String> headerRow = dataTable.get(0);
@@ -183,21 +182,21 @@ public class ExcelWrapper {
                     // Get current row data.
                     List<String> dataRow = dataTable.get(i);
 
-                    // Create a JSONObject object to store row data.
-                    JSONObject rowJsonObject = new JSONObject();
+                    // Create a JsonObject object to store row data.
+                    JsonObject rowJsonObject = new JsonObject();
 
                     for(int j=0;j<columnCount;j++)
                     {
                         String columnName = headerRow.get(j);
                         String columnValue = dataRow.get(j);
 
-                        rowJsonObject.put(columnName, columnValue);
+                        rowJsonObject.addProperty(columnName, columnValue);
                     }
 
-                    tableJsonObject.put("Row " + i, rowJsonObject);
+                    tableJsonObject.add("Row " + i, rowJsonObject);
                 }
 
-                // Return string format data of JSONObject object.
+                // Return string format data of JsonObject object.
                 ret = tableJsonObject.toString();
 
             }
