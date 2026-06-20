@@ -1,4 +1,4 @@
-# common-util
+# data-morph
 
 A Java utility for processing Excel files and converting their data into JSON and formatted text files. 
 
@@ -23,14 +23,14 @@ To compile and package the project into a runnable JAR, run:
 mvn clean install
 ```
 
-This will produce an executable `common-util-1.0-SNAPSHOT.jar` inside the `target/` directory.
+This will produce an executable `data-morph-1.0-SNAPSHOT.jar` inside the `target/` directory.
 
 ## Usage
 
 To use the utility, run the JAR and pass the absolute path to your Excel file as the first argument:
 
 ```bash
-java -jar target/common-util-1.0-SNAPSHOT.jar /path/to/your/excel_file.xls
+java -jar target/data-morph-1.0-SNAPSHOT.jar /path/to/your/excel_file.xls
 ```
 
 If successful, the utility will output statements indicating that the `.json` and `.txt` files have been successfully created next to the input file.
