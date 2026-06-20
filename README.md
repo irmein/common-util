@@ -12,7 +12,7 @@ A Java utility for processing Excel files and converting their data into JSON an
 
 ## Prerequisites
 
-- Java 8 or higher
+- Java 25 (Temurin distribution recommended)
 - Maven 3.x
 
 ## Building the Project
