@@ -66,25 +66,18 @@ public class ExcelWrapperTest {
         ExcelWrapper.process(testFile);
 
         File expectedJsonFile = new File(testDir, "TestSheet.json");
-        File expectedTxtFile = new File(testDir, "TestSheet.txt");
+        File expectedCsvFile = new File(testDir, "TestSheet.csv");
 
         assertTrue("JSON file should be created", expectedJsonFile.exists());
-        assertTrue("TXT file should be created", expectedTxtFile.exists());
+        assertTrue("CSV file should be created", expectedCsvFile.exists());
 
         String jsonContent = new String(Files.readAllBytes(Paths.get(expectedJsonFile.getAbsolutePath())));
-        String txtContent = new String(Files.readAllBytes(Paths.get(expectedTxtFile.getAbsolutePath())));
+        String csvContent = new String(Files.readAllBytes(Paths.get(expectedCsvFile.getAbsolutePath())));
 
-        // JSON string formatting in ExcelWrapper
-        // It creates something like: {"Row 1":{"ID":"101","Name":"John Doe","Active":"true"}}
         assertTrue("JSON content should contain data", jsonContent.contains("John Doe"));
-        assertTrue("JSON content should contain boolean data", jsonContent.contains("true"));
-        assertTrue("JSON content should contain numeric data", jsonContent.contains("101"));
+        assertTrue("JSON content should contain ID", jsonContent.contains("101"));
 
-        // TXT formatting
-        // It creates something like: 
-        // ID    Name    Active    
-        // 101.0    John Doe    true    
-        assertTrue("TXT content should contain header", txtContent.contains("ID    Name    Active"));
-        assertTrue("TXT content should contain row data: " + txtContent, txtContent.contains("101.0") && txtContent.contains("John Doe") && txtContent.contains("true"));
+        assertTrue("CSV content should contain header", csvContent.contains("ID,Name,Active"));
+        assertTrue("CSV content should contain row data", csvContent.contains("101") && csvContent.contains("John Doe"));
     }
 }

@@ -4,11 +4,11 @@ A Java utility for processing Excel files and converting their data into JSON an
 
 ## Features
 
-- Reads `.xls` (HSSFWorkbook) Excel files.
+- Reads both `.xls` and `.xlsx` modern Excel files.
 - Extracts data from all sheets within the workbook.
 - Outputs two files for each sheet (in the same directory as the source Excel file):
-  - `<SheetName>.json`: Contains the sheet data formatted as a JSON object, where the first row acts as keys.
-  - `<SheetName>.txt`: Contains the sheet data in a plain text, tab-separated format.
+  - `<SheetName>.json`: Contains the sheet data formatted as a standard JSON array of objects.
+  - `<SheetName>.csv`: Contains the sheet data in a standard Comma-Separated Values (CSV) format.
 
 ## Prerequisites
 
@@ -23,6 +23,8 @@ To compile and package the project into a runnable JAR, run:
 mvn clean install
 ```
 
+The build includes automated security auditing via the OWASP `dependency-check-maven` plugin. The build will automatically fail if dependencies with high or critical vulnerabilities (CVSS >= 7) are detected.
+
 This will produce an executable `data-morph-1.0-SNAPSHOT.jar` inside the `target/` directory.
 
 ## Usage
@@ -30,7 +32,7 @@ This will produce an executable `data-morph-1.0-SNAPSHOT.jar` inside the `target
 To use the utility, run the JAR and pass the absolute path to your Excel file as the first argument:
 
 ```bash
-java -jar target/data-morph-1.0-SNAPSHOT.jar /path/to/your/excel_file.xls
+java -jar target/data-morph-1.0-SNAPSHOT.jar /path/to/your/excel_file.xlsx
 ```
 
-If successful, the utility will output statements indicating that the `.json` and `.txt` files have been successfully created next to the input file.
+If successful, the utility will output statements indicating that the `.json` and `.csv` files have been successfully created next to the input file.

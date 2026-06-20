@@ -1,281 +1,139 @@
 package com.merker.common.util.app;
 
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Header;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-
-import org.openqa.selenium.json.Json;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.JsonObject;
+import com.google.gson.GsonBuilder;
 
 public class ExcelWrapper {
 
-    /*
-     *
-     * */
     public static void process(File file) {
        creteJSONAndTextFileFromExcel(file);
     }
 
-    /* Read data from an excel file and output each sheet data to a json file and a text file. 
-     * filePath :  The excel file store path.
-     * */
-    private static void creteJSONAndTextFileFromExcel(File file)
-    {
-        String filePath = file.getAbsolutePath();
-        try{
-         /* First need to open the file. */
-            FileInputStream fInputStream = new FileInputStream(filePath.trim());
-   
-         /* Create the workbook object to access excel file. */
-            
-         /* Because this example use .xls excel file format, so it should use HSSFWorkbook class. For .xlsx format excel file use XSSFWorkbook class.*/;
-            Workbook excelWorkBook = new HSSFWorkbook(fInputStream);
+    private static void creteJSONAndTextFileFromExcel(File file) {
+        try (InputStream fInputStream = new FileInputStream(file);
+             Workbook excelWorkBook = WorkbookFactory.create(fInputStream)) {
 
-            // Get all excel sheet count.
             int totalSheetNumber = excelWorkBook.getNumberOfSheets();
-
-            // Loop in all excel sheet.
-            for(int i=0;i<totalSheetNumber;i++)
-            {
-                // Get current sheet.
+            for(int i = 0; i < totalSheetNumber; i++) {
                 Sheet sheet = excelWorkBook.getSheetAt(i);
-
-                // Get sheet name.
                 String sheetName = sheet.getSheetName();
 
-                if(sheetName != null && sheetName.length() > 0)
-                {
-                    // Get current sheet data in a list table.
+                if(sheetName != null && sheetName.length() > 0) {
                     List<List<String>> sheetDataTable = getSheetDataList(sheet);
 
-                    // Generate JSON format of above sheet data and write to a JSON file.
                     String jsonString = getJSONStringFromList(sheetDataTable);
-                    String jsonFileName = sheet.getSheetName() + ".json";
+                    String jsonFileName = sheetName + ".json";
                     writeStringToFile(file.getParentFile().getAbsolutePath(), jsonString, jsonFileName);
 
-                    // Generate text table format of above sheet data and write to a text file.
                     String textTableString = getTextTableStringFromList(sheetDataTable);
-                    String textTableFileName = sheet.getSheetName() + ".txt";
+                    String textTableFileName = sheetName + ".csv";
                     writeStringToFile(file.getParentFile().getAbsolutePath(), textTableString, textTableFileName);
-
                 }
             }
-            // Close excel work book object. 
-            excelWorkBook.close();
-        }catch(Exception ex){
-            System.err.println(ex.getMessage());
+        } catch(Exception ex) {
+            ex.printStackTrace();
         }
     }
 
+    private static List<List<String>> getSheetDataList(Sheet sheet) {
+        List<List<String>> ret = new ArrayList<>();
+        DataFormatter formatter = new DataFormatter();
 
-    /* Return sheet data in a two dimensional list. 
-     * Each element in the outer list is represent a row, 
-     * each element in the inner list represent a column.
-     * The first row is the column name row.*/
-    private static List<List<String>> getSheetDataList(Sheet sheet)
-    {
-        List<List<String>> ret = new ArrayList<List<String>>();
-
-        // Get the first and last sheet row number.
         int firstRowNum = sheet.getFirstRowNum();
         int lastRowNum = sheet.getLastRowNum();
 
-        if(lastRowNum > 0)
-        {
-            // Loop in sheet rows.
-            for(int i=firstRowNum; i<lastRowNum + 1; i++)
-            {
-                // Get current row object.
+        if(lastRowNum > 0) {
+            for(int i = firstRowNum; i <= lastRowNum; i++) {
                 Row row = sheet.getRow(i);
+                if (row == null) continue;
 
-                // Get first and last cell number.
-                int firstCellNum = row.getFirstCellNum();
                 int lastCellNum = row.getLastCellNum();
+                if (lastCellNum < 0) continue;
 
-                // Create a String list to save column data in a row.
-                List<String> rowDataList = new ArrayList<String>();
-
-                // Loop in the row cells.
-                for(int j = firstCellNum; j < lastCellNum; j++)
-                {
-                    // Get current cell.
+                List<String> rowDataList = new ArrayList<>();
+                for(int j = 0; j < lastCellNum; j++) {
                     Cell cell = row.getCell(j);
-
-                    // Get cell type.
-                    CellType cellType = cell.getCellType();
-
-                    if(cellType == CellType.NUMERIC)
-                    {
-                        double numberValue = cell.getNumericCellValue();
-
-                        // BigDecimal is used to avoid double value is counted use Scientific counting method.
-                        // For example the original double variable value is 12345678, but jdk translated the value to 1.2345678E7.
-                        String stringCellValue = BigDecimal.valueOf(numberValue).toPlainString();
-
-                        rowDataList.add(stringCellValue);
-
-                    }else if(cellType == CellType.STRING)
-                    {
-                        String cellValue = cell.getStringCellValue();
-                        rowDataList.add(cellValue);
-                    }else if(cellType == CellType.BOOLEAN)
-                    {
-                        boolean numberValue = cell.getBooleanCellValue();
-
-                        String stringCellValue = String.valueOf(numberValue);
-
-                        rowDataList.add(stringCellValue);
-
-                    }else if(cellType == CellType.BLANK)
-                    {
-                        rowDataList.add("");
-                    }
+                    String cellValue = formatter.formatCellValue(cell);
+                    rowDataList.add(cellValue);
                 }
-
-                // Add current row data list in the return list.
                 ret.add(rowDataList);
             }
         }
         return ret;
     }
 
-    /* Return a JSON string from the string list. */
-    private static String getJSONStringFromList(List<List<String>> dataTable)
-    {
-        String ret = "";
-
-        if(dataTable != null)
-        {
-            int rowCount = dataTable.size();
-
-            if(rowCount > 1)
-            {
-                // Create a JsonObject to store table data.
-                JsonObject tableJsonObject = new JsonObject();
-
-                // The first row is the header row, store each column name.
-                List<String> headerRow = dataTable.get(0);
-
-                int columnCount = headerRow.size();
-
-                // Loop in the row data list.
-                for(int i=1; i<rowCount; i++)
-                {
-                    // Get current row data.
-                    List<String> dataRow = dataTable.get(i);
-
-                    // Create a JsonObject object to store row data.
-                    JsonObject rowJsonObject = new JsonObject();
-
-                    for(int j=0;j<columnCount;j++)
-                    {
-                        String columnName = headerRow.get(j);
-                        String columnValue = dataRow.get(j);
-
-                        rowJsonObject.addProperty(columnName, columnValue);
-                    }
-
-                    tableJsonObject.add("Row " + i, rowJsonObject);
-                }
-
-                // Return string format data of JsonObject object.
-                ret = tableJsonObject.toString();
-
-            }
+    private static String getJSONStringFromList(List<List<String>> dataTable) {
+        if(dataTable == null || dataTable.size() <= 1) {
+            return "[]";
         }
-        return ret;
+        List<Map<String, String>> list = new ArrayList<>();
+        List<String> headerRow = dataTable.get(0);
+        int columnCount = headerRow.size();
+
+        for(int i = 1; i < dataTable.size(); i++) {
+            List<String> dataRow = dataTable.get(i);
+            Map<String, String> rowMap = new LinkedHashMap<>();
+            for(int j = 0; j < columnCount; j++) {
+                String columnName = headerRow.get(j);
+                String columnValue = (dataRow.size() > j) ? dataRow.get(j) : "";
+                rowMap.put(columnName, columnValue);
+            }
+            list.add(rowMap);
+        }
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(list);
     }
 
-
-    /* Return a text table string from the string list. */
-    private static String getTextTableStringFromList(List<List<String>> dataTable)
-    {
-        StringBuffer strBuf = new StringBuffer();
-
-        if(dataTable != null)
-        {
-            // Get all row count.
-            int rowCount = dataTable.size();
-
-            // Loop in the all rows.
-            for(int i=0;i<rowCount;i++)
-            {
-                // Get each row.
-                List<String> row = dataTable.get(i);
-
-                // Get one row column count.
-                int columnCount = row.size();
-
-                // Loop in the row columns.
-                for(int j=0;j<columnCount;j++)
-                {
-                    // Get column value.
+    private static String getTextTableStringFromList(List<List<String>> dataTable) {
+        StringBuilder strBuf = new StringBuilder();
+        if(dataTable != null) {
+            for(List<String> row : dataTable) {
+                for(int j = 0; j < row.size(); j++) {
                     String column = row.get(j);
-
-                    // Append column value and a white space to separate value.
-                    strBuf.append(column);
-                    strBuf.append("    ");
+                    if (column != null && (column.contains(",") || column.contains("\"") || column.contains("\n"))) {
+                        strBuf.append("\"").append(column.replace("\"", "\"\"")).append("\"");
+                    } else if (column != null) {
+                        strBuf.append(column);
+                    }
+                    
+                    if (j < row.size() - 1) {
+                        strBuf.append(",");
+                    }
                 }
-
-                // Add a return character at the end of the row. 
                 strBuf.append("\r\n");
             }
-
         }
         return strBuf.toString();
     }
 
-    /* Write string data to a file.*/
-    private static void writeStringToFile(String workingDir, String data, String fileName)
-    {
-        try
-        {
-            // Get current executing class working directory.
-            String currentWorkingFolder = workingDir;
-
-            // Get file path separator.
-            String filePathSeperator = System.getProperty("file.separator");
-
-            // Get the output file absolute path.
-            String filePath = currentWorkingFolder + filePathSeperator + fileName;
-
-            // Create File, FileWriter and BufferedWriter object.
-            File file = new File(filePath);
-
-            FileWriter fw = new FileWriter(file);
-
-            BufferedWriter buffWriter = new BufferedWriter(fw);
-
-            // Write string data to the output file, flush and close the buffered writer object.
+    private static void writeStringToFile(String workingDir, String data, String fileName) {
+        Path filePath = Paths.get(workingDir, fileName);
+        try (BufferedWriter buffWriter = Files.newBufferedWriter(filePath)) {
             buffWriter.write(data);
-
-            buffWriter.flush();
-
-            buffWriter.close();
-
-            System.out.println(filePath + " has been created.");
-
-        }catch(IOException ex)
-        {
-            System.err.println(ex.getMessage());
+            System.out.println(filePath.toAbsolutePath().toString() + " has been created.");
+        } catch(IOException ex) {
+            ex.printStackTrace();
         }
     }
 }
