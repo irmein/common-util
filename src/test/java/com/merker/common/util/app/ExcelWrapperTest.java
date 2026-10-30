@@ -80,4 +80,55 @@ public class ExcelWrapperTest {
         assertTrue("CSV content should contain header", csvContent.contains("ID,Name,Active"));
         assertTrue("CSV content should contain row data", csvContent.contains("101") && csvContent.contains("John Doe"));
     }
+
+    @Test
+    public void testFormulaInjectionNeutralizedInCSV() throws Exception {
+        File formulaFile = new File(testDir, "formula_test.xls");
+        try (Workbook workbook = new HSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("FormulaSheet");
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("Command");
+
+            Row data = sheet.createRow(1);
+            data.createCell(0).setCellValue("=cmd|'/C calc'!A0");
+
+            try (FileOutputStream fileOut = new FileOutputStream(formulaFile)) {
+                workbook.write(fileOut);
+            }
+        }
+
+        ExcelWrapper.process(formulaFile);
+        File csvFile = new File(testDir, "FormulaSheet.csv");
+        assertTrue("Formula CSV file should be created", csvFile.exists());
+
+        String csvContent = new String(Files.readAllBytes(Paths.get(csvFile.getAbsolutePath())));
+        assertTrue("Formula should be sanitized with leading quote", csvContent.contains("'=cmd|'/C calc'!A0"));
+    }
+
+    @Test
+    public void testPathTraversalInSheetNameSanitized() throws Exception {
+        File traversalFile = new File(testDir, "traversal_test.xls");
+        try (Workbook workbook = new HSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet(".._escape");
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("Col");
+
+            Row data = sheet.createRow(1);
+            data.createCell(0).setCellValue("Val");
+
+            try (FileOutputStream fileOut = new FileOutputStream(traversalFile)) {
+                workbook.write(fileOut);
+            }
+        }
+
+        ExcelWrapper.process(traversalFile);
+        // Ensure no file was created outside testDir
+        File parentOfTestDir = testDir.getParentFile();
+        File escapedFile = new File(parentOfTestDir, "escape.json");
+        assertTrue("File must not escape test directory", !escapedFile.exists());
+
+        // File should exist safely inside testDir
+        File sanitizedJson = new File(testDir, "_escape.json");
+        assertTrue("Sanitized file should exist in working dir", sanitizedJson.exists());
+    }
 }

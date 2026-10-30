@@ -39,14 +39,15 @@ public class ExcelWrapper {
                 String sheetName = sheet.getSheetName();
 
                 if(sheetName != null && sheetName.length() > 0) {
+                    String safeSheetName = sanitizeFileName(sheetName);
                     List<List<String>> sheetDataTable = getSheetDataList(sheet);
 
                     String jsonString = getJSONStringFromList(sheetDataTable);
-                    String jsonFileName = sheetName + ".json";
+                    String jsonFileName = safeSheetName + ".json";
                     writeStringToFile(file.getParentFile().getAbsolutePath(), jsonString, jsonFileName);
 
                     String textTableString = getTextTableStringFromList(sheetDataTable);
-                    String textTableFileName = sheetName + ".csv";
+                    String textTableFileName = safeSheetName + ".csv";
                     writeStringToFile(file.getParentFile().getAbsolutePath(), textTableString, textTableFileName);
                 }
             }
@@ -111,7 +112,14 @@ public class ExcelWrapper {
             for(List<String> row : dataTable) {
                 for(int j = 0; j < row.size(); j++) {
                     String column = row.get(j);
-                    if (column != null && (column.contains(",") || column.contains("\"") || column.contains("\n"))) {
+                    if (column != null) {
+                        // Mitigate CSV Formula Injection (CWE-1236)
+                        if (column.startsWith("=") || column.startsWith("+") || column.startsWith("-") ||
+                            column.startsWith("@") || column.startsWith("\t") || column.startsWith("\r")) {
+                            column = "'" + column;
+                        }
+                    }
+                    if (column != null && (column.contains(",") || column.contains("\"") || column.contains("\n") || column.contains("\r"))) {
                         strBuf.append("\"").append(column.replace("\"", "\"\"")).append("\"");
                     } else if (column != null) {
                         strBuf.append(column);
@@ -127,8 +135,28 @@ public class ExcelWrapper {
         return strBuf.toString();
     }
 
+    private static String sanitizeFileName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "sheet";
+        }
+        // Remove directory traversal sequences, path separators and control characters
+        String sanitized = name.replaceAll("[/\\\\\\r\\n\\u0000]", "_").trim();
+        while (sanitized.startsWith(".")) {
+            sanitized = sanitized.substring(1).trim();
+        }
+        if (sanitized.isEmpty()) {
+            sanitized = "sheet";
+        }
+        return sanitized;
+    }
+
     private static void writeStringToFile(String workingDir, String data, String fileName) {
-        Path filePath = Paths.get(workingDir, fileName);
+        Path baseDir = Paths.get(workingDir).toAbsolutePath().normalize();
+        Path filePath = baseDir.resolve(fileName).normalize();
+        if (!filePath.startsWith(baseDir)) {
+            System.err.println("Security alert: Attempted path traversal for file " + fileName);
+            return;
+        }
         try (BufferedWriter buffWriter = Files.newBufferedWriter(filePath)) {
             buffWriter.write(data);
             System.out.println(filePath.toAbsolutePath().toString() + " has been created.");
