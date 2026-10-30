@@ -27,12 +27,28 @@ public class AppTest {
     @Test
     public void testMainWithNoArgs() throws Exception {
         App.main(new String[]{});
-        assertEquals("Pass the file to be converted in -f option.\n", outContent.toString());
+        String expected = "Pass the file to be converted in -f option." + System.lineSeparator() +
+                          "To check the version, use -v or --version." + System.lineSeparator();
+        assertEquals(expected, outContent.toString());
     }
 
     @Test
     public void testMainWithTooManyArgs() throws Exception {
         App.main(new String[]{"arg1", "arg2"});
-        assertEquals("Pass the file to be converted in -f option.\n", outContent.toString());
+        String expected = "Pass the file to be converted in -f option." + System.lineSeparator() +
+                          "To check the version, use -v or --version." + System.lineSeparator();
+        assertEquals(expected, outContent.toString());
+    }
+
+    @Test
+    public void testMainWithVersionFlag() throws Exception {
+        App.main(new String[]{"--version"});
+        assertEquals("data-morph version 1.0-SNAPSHOT" + System.lineSeparator(), outContent.toString());
+    }
+
+    @Test
+    public void testMainWithShortVersionFlag() throws Exception {
+        App.main(new String[]{"-v"});
+        assertEquals("data-morph version 1.0-SNAPSHOT" + System.lineSeparator(), outContent.toString());
     }
 }

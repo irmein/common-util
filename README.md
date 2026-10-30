@@ -36,3 +36,9 @@ java -jar target/data-morph-1.0-SNAPSHOT.jar /path/to/your/excel_file.xlsx
 ```
 
 If successful, the utility will output statements indicating that the `.json` and `.csv` files have been successfully created next to the input file.
+
+To check the utility version, run:
+
+```bash
+java -jar target/data-morph-1.0-SNAPSHOT.jar --version
+```
