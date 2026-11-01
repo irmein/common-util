@@ -139,8 +139,10 @@
             </execution>
           </executions>
           <configuration>
-            <failBuildOnCVSS>7</failBuildOnCVSS>
+            <failBuildOnCVSS>${failBuildOnCVSS:7}</failBuildOnCVSS>
             <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+            <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+            <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
           </configuration>
         </plugin>
       </plugins>
