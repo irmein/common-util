@@ -8,7 +8,24 @@ This document outlines the recommended ways to securely store and use the NVD AP
 
 The most universal and secure way to handle secrets is through environment variables. This prevents hardcoding the key in configuration files.
 
-### How to configure:
+### Interactive Setup Scripts:
+You can use the helper setup scripts provided in the repository to prompt for and configure the API key:
+
+**macOS/Linux (Shell):**
+```bash
+# Source it to set for the current shell session & save to ~/.zshrc or ~/.bashrc:
+source ./set-nvd-key.sh
+
+# Or run directly (pass key or enter interactively):
+./set-nvd-key.sh
+```
+
+**Windows (Batch):**
+```cmd
+set-nvd-key.bat
+```
+
+### Manual Configuration:
 **macOS/Linux:**
 Add the following to your `~/.zshrc` or `~/.bash_profile`:
 ```bash

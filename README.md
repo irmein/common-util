@@ -25,6 +25,22 @@ mvn clean install
 
 The build includes automated security auditing via the OWASP `dependency-check-maven` plugin. The build will automatically fail if dependencies with high or critical vulnerabilities (CVSS >= 7) are detected.
 
+You can also use the included client wrapper (`./mvn-client.sh` or `mvn-client.bat`) to easily run scans, generate reports, or execute builds:
+
+```bash
+# Run vulnerability scan (fails if CVSS >= 7)
+./mvn-client.sh scan
+
+# Generate HTML report without failing build
+./mvn-client.sh report
+
+# Open latest generated report
+./mvn-client.sh open-report
+
+# Or run interactively with a menu:
+./mvn-client.sh
+```
+
 This will produce an executable `data-morph-1.0-SNAPSHOT.jar` inside the `target/` directory.
 
 ## Usage
