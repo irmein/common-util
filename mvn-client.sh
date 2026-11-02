@@ -3,19 +3,25 @@
 # mvn-client.sh - Convenient wrapper client for Maven and OWASP NVD scanning
 # Ensures Java, SDKMAN, and NVD_API_KEY environment variables are properly initialized.
 
-# 1. Resolve JAVA_HOME if unset or pointing to a non-existent directory
-if [ -z "$JAVA_HOME" ] || [ ! -d "$JAVA_HOME" ]; then
+# 1. Resolve JAVA_HOME if unset or pointing to a non-existent directory / invalid java binary
+if [ -z "$JAVA_HOME" ] || [ ! -x "$JAVA_HOME/bin/java" ]; then
     if [ -d "$HOME/.sdkman/candidates/java/current" ]; then
         export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
         export PATH="$JAVA_HOME/bin:$PATH"
-    elif [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]; then
+    elif [ -s "$HOME/.sdkman/bin/sdkman-init.sh" ] && [ -d "$HOME/.sdkman/candidates/java" ]; then
         # shellcheck disable=SC1090
         source "$HOME/.sdkman/bin/sdkman-init.sh" >/dev/null 2>&1 || true
-    elif command -v /usr/libexec/java_home >/dev/null 2>&1; then
-        DETECTED_JAVA=$(/usr/libexec/java_home 2>/dev/null || true)
-        if [ -n "$DETECTED_JAVA" ] && [ -d "$DETECTED_JAVA" ]; then
-            export JAVA_HOME="$DETECTED_JAVA"
+    fi
+    if [ -z "$JAVA_HOME" ] || [ ! -x "$JAVA_HOME/bin/java" ]; then
+        if [ -d "/opt/homebrew/opt/openjdk" ]; then
+            export JAVA_HOME="/opt/homebrew/opt/openjdk"
             export PATH="$JAVA_HOME/bin:$PATH"
+        elif command -v /usr/libexec/java_home >/dev/null 2>&1; then
+            DETECTED_JAVA=$(/usr/libexec/java_home 2>/dev/null || true)
+            if [ -n "$DETECTED_JAVA" ] && [ -d "$DETECTED_JAVA" ]; then
+                export JAVA_HOME="$DETECTED_JAVA"
+                export PATH="$JAVA_HOME/bin:$PATH"
+            fi
         fi
     fi
 fi
